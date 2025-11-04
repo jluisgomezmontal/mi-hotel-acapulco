@@ -21,7 +21,7 @@ import {
 import { usePayments } from '@/lib/hooks/usePayments';
 import { Plus, CreditCard, DollarSign } from 'lucide-react';
 import Link from 'next/link';
-import type { Payment, Reservation, Guest } from '@/lib/types';
+import type { Payment, Guest } from '@/lib/types';
 
 const methodLabels = {
   efectivo: 'Efectivo',
@@ -36,7 +36,7 @@ const methodColors = {
 };
 
 export default function PaymentsPage() {
-  const { data: payments, isLoading, error } = usePayments();
+  const { data: paymentsData, isLoading, error } = usePayments();
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-MX', {
@@ -48,8 +48,12 @@ export default function PaymentsPage() {
     });
   };
 
-  const totalAmount = payments?.reduce((sum, payment) => sum + payment.amount, 0) || 0;
-
+  const payments = paymentsData?.results ?? [];
+  const totalAmount = paymentsData?.totalAmount ?? payments.reduce((sum, payment) => sum + payment.amount, 0);
+  const paymentCount = payments.length;
+  const cashPayments = payments.filter((payment) => payment.method === 'efectivo');
+  const cashAmount = cashPayments.reduce((sum, payment) => sum + payment.amount, 0);
+console.log(payments)
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -67,7 +71,7 @@ export default function PaymentsPage() {
           </Link>
         </div>
 
-        {payments && payments.length > 0 && (
+        {paymentCount > 0 && (
           <div className="mb-6 grid gap-4 md:grid-cols-3">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -77,7 +81,7 @@ export default function PaymentsPage() {
               <CardContent>
                 <div className="text-2xl font-bold">${totalAmount.toFixed(2)}</div>
                 <p className="text-xs text-muted-foreground">
-                  {payments.length} pago{payments.length !== 1 ? 's' : ''}
+                  {paymentCount} pago{paymentCount !== 1 ? 's' : ''}
                 </p>
               </CardContent>
             </Card>
@@ -89,7 +93,7 @@ export default function PaymentsPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  ${payments.length > 0 ? (totalAmount / payments.length).toFixed(2) : '0.00'}
+                  ${paymentCount > 0 ? (totalAmount / paymentCount).toFixed(2) : '0.00'}
                 </div>
                 <p className="text-xs text-muted-foreground">Por transacción</p>
               </CardContent>
@@ -103,14 +107,10 @@ export default function PaymentsPage() {
               <CardContent>
                 <div className="text-2xl font-bold">
                   $
-                  {payments
-                    .filter((p) => p.method === 'efectivo')
-                    .reduce((sum, p) => sum + p.amount, 0)
-                    .toFixed(2)}
+                  {cashAmount.toFixed(2)}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {payments.filter((p) => p.method === 'efectivo').length} pago
-                  {payments.filter((p) => p.method === 'efectivo').length !== 1 ? 's' : ''}
+                  {cashPayments.length} pago{cashPayments.length !== 1 ? 's' : ''}
                 </p>
               </CardContent>
             </Card>
@@ -133,13 +133,13 @@ export default function PaymentsPage() {
           </Card>
         )}
 
-        {payments && payments.length > 0 && (
+        {paymentCount > 0 && (
           <Card>
             <CardHeader>
               <CardTitle>Lista de Pagos</CardTitle>
               <CardDescription>
-                {payments.length} pago{payments.length !== 1 ? 's' : ''} registrado
-                {payments.length !== 1 ? 's' : ''}
+                {paymentCount} pago{paymentCount !== 1 ? 's' : ''} registrado
+                {paymentCount !== 1 ? 's' : ''}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -159,9 +159,9 @@ export default function PaymentsPage() {
                     const guest = payment.guest as Guest;
 
                     return (
-                      <TableRow key={payment._id}>
+                      <TableRow key={payment.id}>
                         <TableCell className="font-medium">
-                          {formatDate(payment.date)}
+                          {formatDate(payment.createdAt)}
                         </TableCell>
                         <TableCell>
                           {typeof guest === 'object'
@@ -182,7 +182,7 @@ export default function PaymentsPage() {
                           </span>
                         </TableCell>
                         <TableCell>
-                          <Link href={`/payments/${payment._id}`}>
+                          <Link href={`/payments/${payment.id}`}>
                             <Button variant="ghost" size="sm">
                               Ver
                             </Button>
@@ -197,7 +197,7 @@ export default function PaymentsPage() {
           </Card>
         )}
 
-        {payments && payments.length === 0 && (
+        {paymentsData && paymentCount === 0 && (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <CreditCard className="mb-4 h-12 w-12 text-muted-foreground" />

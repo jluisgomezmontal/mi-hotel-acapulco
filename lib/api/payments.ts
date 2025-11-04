@@ -1,5 +1,5 @@
 import { API_ENDPOINTS } from '../config';
-import type { Payment, PaymentFormData } from '../types';
+import type { Payment, PaymentFormData, PaymentListResponse, Reservation } from '../types';
 
 export const paymentsApi = {
   getAll: async (params?: {
@@ -8,7 +8,7 @@ export const paymentsApi = {
     method?: string;
     startDate?: string;
     endDate?: string;
-  }): Promise<Payment[]> => {
+  }): Promise<PaymentListResponse> => {
     const queryParams = new URLSearchParams();
     if (params?.reservationId) queryParams.append('reservationId', params.reservationId);
     if (params?.guestId) queryParams.append('guestId', params.guestId);
@@ -19,7 +19,18 @@ export const paymentsApi = {
     const response = await fetch(`${API_ENDPOINTS.payments}?${queryParams}`);
     if (!response.ok) throw new Error('Failed to fetch payments');
     const data = await response.json();
-    return data.data || data;
+    const payload = data.data || data;
+    if (Array.isArray(payload)) {
+      return {
+        results: payload,
+        count: payload.length,
+        total: payload.length,
+        totalPages: 1,
+        page: 1,
+        totalAmount: payload.reduce((sum: number, payment: Payment) => sum + payment.amount, 0),
+      };
+    }
+    return payload;
   },
 
   getById: async (id: string): Promise<Payment> => {
@@ -40,7 +51,12 @@ export const paymentsApi = {
     return data.data || data;
   },
 
-  create: async (payment: PaymentFormData): Promise<Payment> => {
+  create: async (
+    payment: PaymentFormData,
+  ): Promise<{
+    payment: Payment;
+    reservation?: Reservation;
+  }> => {
     const response = await fetch(API_ENDPOINTS.payments, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

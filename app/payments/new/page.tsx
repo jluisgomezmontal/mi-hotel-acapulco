@@ -1,13 +1,13 @@
 import { Navbar } from '@/components/layout/Navbar';
-import { ReservationForm } from '@/components/reservations/ReservationForm';
+import { PaymentForm } from '@/components/payments/PaymentForm';
 
-export default function NewReservationPage() {
+export default function NewPaymentPage() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="container mx-auto px-4 py-8">
-        <div className="mx-auto max-w-4xl">
-          <ReservationForm />
+        <div className="mx-auto max-w-3xl">
+          <PaymentForm />
         </div>
       </main>
     </div>

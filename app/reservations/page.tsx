@@ -43,7 +43,7 @@ const statusColors: Record<Reservation['status'], string> = {
 
 export default function ReservationsPage() {
   const { data: reservations, isLoading, error } = useReservations();
-
+console.log(reservations)
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-MX', {
       day: '2-digit',
@@ -68,7 +68,6 @@ export default function ReservationsPage() {
             </Button>
           </Link>
         </div>
-testing
         {isLoading && (
           <div className="flex justify-center py-12">
             <div className="text-muted-foreground">Cargando reservaciones...</div>

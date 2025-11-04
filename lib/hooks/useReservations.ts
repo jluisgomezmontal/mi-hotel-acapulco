@@ -67,10 +67,25 @@ export function useUpdateReservationStatus() {
       status,
     }: {
       id: string;
-      status: 'pending' | 'confirmed' | 'checked-in' | 'checked-out' | 'cancelled';
+      status: 'pending' | 'confirmed' | 'checked-in' | 'checked-out' | 'cancelled' | 'completed';
     }) => reservationsApi.updateStatus(id, status),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['reservations'] });
+      queryClient.invalidateQueries({ queryKey: ['reservations', variables.id] });
+    },
+  });
+}
+
+export function useUpdateReservation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: ReservationFormData }) =>
+      reservationsApi.update(id, data),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['reservations'] });
+      queryClient.invalidateQueries({ queryKey: ['reservations', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['rooms'] });
     },
   });
 }

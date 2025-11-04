@@ -68,6 +68,7 @@ export function ReservationForm() {
 
   const mode = form.watch('mode');
   const roomNumberValue = form.watch('roomNumber');
+  const checkInValue = form.watch('checkIn');
 
   const rooms = useMemo(() => roomsData?.filter((room) => room.isAvailable) ?? [], [roomsData]);
   const guests = useMemo(() => guestsData?.guests ?? [], [guestsData]);
@@ -77,16 +78,43 @@ export function ReservationForm() {
       form.setValue('guest', undefined, { shouldValidate: true });
     } else {
       const currentGuest = form.getValues('guest');
-      form.setValue('guest', currentGuest ?? { ...NEW_GUEST_DEFAULT }, { shouldValidate: true });
+      form.setValue('guest', currentGuest ?? { ...NEW_GUEST_DEFAULT }, { shouldValidate: !true });
       form.setValue('guestId', '', { shouldValidate: true });
     }
   }, [mode, form]);
+
+  useEffect(() => {
+    if (!checkInValue) return;
+
+    const checkOutValue = form.getValues('checkOut');
+    if (!checkOutValue) return;
+
+    const checkInDate = new Date(checkInValue);
+    const checkOutDate = new Date(checkOutValue);
+
+    if (Number.isNaN(checkInDate.getTime()) || Number.isNaN(checkOutDate.getTime())) {
+      return;
+    }
+
+    if (checkOutDate <= checkInDate) {
+      form.setValue('checkOut', '', { shouldValidate: true, shouldDirty: true });
+    }
+  }, [checkInValue, form]);
 
   const selectedRoom = useMemo(() => {
     const numericRoom = Number(roomNumberValue);
     if (!Number.isFinite(numericRoom) || numericRoom <= 0) return undefined;
     return rooms.find((room) => Number(room.number) === numericRoom);
   }, [rooms, roomNumberValue]);
+
+  const minCheckoutDate = useMemo(() => {
+    if (!checkInValue) return undefined;
+    const checkInDate = new Date(checkInValue);
+    if (Number.isNaN(checkInDate.getTime())) return undefined;
+    const nextDay = new Date(checkInDate);
+    nextDay.setDate(nextDay.getDate() + 1);
+    return nextDay.toISOString().split('T')[0];
+  }, [checkInValue]);
 
   const onSubmit = async (values: ReservationFormValues) => {
     setApiError(null);
@@ -211,7 +239,7 @@ export function ReservationForm() {
                     <FormItem>
                       <FormLabel>Check-out</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <Input type="date" min={minCheckoutDate} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

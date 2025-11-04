@@ -89,3 +89,55 @@ export const reservationFormSchema = z
 export type ReservationFormValues = z.input<typeof reservationFormSchema>;
 export type ReservationFormParsedValues = z.output<typeof reservationFormSchema>;
 export const documentTypeOptions = documentTypes;
+
+export const reservationUpdateSchema = z
+  .object({
+    roomNumber: z.coerce.number().int('La habitación debe ser un número entero').positive(),
+    checkIn: z.string().min(1, 'La fecha de check-in es obligatoria'),
+    checkOut: z.string().min(1, 'La fecha de check-out es obligatoria'),
+    numberOfGuests: z
+      .coerce.number()
+      .int('Debe ser un número entero')
+      .min(1, 'Al menos un huésped')
+      .max(10, 'Máximo 10 huéspedes')
+      .optional(),
+    notes: z
+      .string()
+      .trim()
+      .max(500, 'Las notas no pueden exceder 500 caracteres')
+      .optional()
+      .or(z.literal('')),
+  })
+  .superRefine((values, ctx) => {
+    const checkInDate = new Date(values.checkIn);
+    const checkOutDate = new Date(values.checkOut);
+
+    if (Number.isNaN(checkInDate.getTime())) {
+      ctx.addIssue({
+        path: ['checkIn'],
+        code: z.ZodIssueCode.custom,
+        message: 'Fecha inválida',
+      });
+    }
+
+    if (Number.isNaN(checkOutDate.getTime())) {
+      ctx.addIssue({
+        path: ['checkOut'],
+        code: z.ZodIssueCode.custom,
+        message: 'Fecha inválida',
+      });
+    }
+
+    if (!Number.isNaN(checkInDate.getTime()) && !Number.isNaN(checkOutDate.getTime())) {
+      if (checkOutDate <= checkInDate) {
+        ctx.addIssue({
+          path: ['checkOut'],
+          code: z.ZodIssueCode.custom,
+          message: 'La salida debe ser posterior al check-in',
+        });
+      }
+    }
+  });
+
+export type ReservationUpdateFormValues = z.input<typeof reservationUpdateSchema>;
+export type ReservationUpdateFormParsedValues = z.output<typeof reservationUpdateSchema>;

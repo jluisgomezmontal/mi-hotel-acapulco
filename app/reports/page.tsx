@@ -39,11 +39,30 @@ const months = [
   'Diciembre',
 ];
 
+const toNumber = (value: unknown, fallback = 0) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const currencyFormatter = new Intl.NumberFormat('es-MX', {
+  style: 'currency',
+  currency: 'MXN',
+  minimumFractionDigits: 2,
+});
+
 export default function ReportsPage() {
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
 
   const { data: report, isLoading, error } = useMonthlyReport(selectedYear, selectedMonth);
+  const safeOccupancyRate = toNumber(report?.occupancy?.occupancyRate);
+  const safeRoomsCount = toNumber(report?.occupancy?.roomsCount);
+  const safeTotalNightsBooked = toNumber(report?.occupancy?.totalNightsBooked);
+  const safeTotalIncome = toNumber(report?.income?.totalIncome);
+  const safeTotalReservations = toNumber(report?.cancellations?.totalReservations);
+  const safeCancellationRate = toNumber(report?.cancellations?.cancellationRate);
+  const safeCancelledReservations = toNumber(report?.cancellations?.cancelledReservations);
+  const roomsIncome = report?.income?.byRoom ?? [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -121,10 +140,13 @@ export default function ReportsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {report.occupancyRate.toFixed(1)}%
+                    {safeOccupancyRate.toFixed(1)}%
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {months[selectedMonth - 1]} {selectedYear}
+                    {report?.period?.label ?? `${months[selectedMonth - 1]} ${selectedYear}`}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {safeRoomsCount} habitaciones · {safeTotalNightsBooked} noches reservadas
                   </p>
                 </CardContent>
               </Card>
@@ -135,18 +157,18 @@ export default function ReportsPage() {
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">${report.totalIncome.toFixed(2)}</div>
+                  <div className="text-2xl font-bold">{currencyFormatter.format(safeTotalIncome)}</div>
                   <p className="text-xs text-muted-foreground">Ingresos del período</p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Reservaciones</CardTitle>
+                  <CardTitle className="text-sm font-medium">Reservaciones Totales</CardTitle>
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{report.totalReservations}</div>
+                  <div className="text-2xl font-bold">{safeTotalReservations}</div>
                   <p className="text-xs text-muted-foreground">Total del mes</p>
                 </CardContent>
               </Card>
@@ -158,21 +180,21 @@ export default function ReportsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {report.cancellationRate.toFixed(1)}%
+                    {safeCancellationRate.toFixed(1)}%
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {report.cancelledReservations} cancelaciones
+                    {safeCancelledReservations} cancelaciones
                   </p>
                 </CardContent>
               </Card>
             </div>
 
-            {report.roomRevenueBreakdown && report.roomRevenueBreakdown.length > 0 && (
+            {roomsIncome.length > 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle>Ingresos por Habitación</CardTitle>
                   <CardDescription>
-                    Desglose de ingresos y reservaciones por habitación
+                    Desglose de ingresos y pagos registrados por habitación
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -180,29 +202,31 @@ export default function ReportsPage() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Habitación</TableHead>
-                        <TableHead>Tipo</TableHead>
-                        <TableHead>Reservaciones</TableHead>
                         <TableHead>Ingresos</TableHead>
-                        <TableHead>Promedio por Reservación</TableHead>
+                        <TableHead>Pagos</TableHead>
+                        <TableHead>Promedio por Pago</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {report.roomRevenueBreakdown.map((room) => (
-                        <TableRow key={room.roomNumber}>
-                          <TableCell className="font-medium">{room.roomNumber}</TableCell>
-                          <TableCell className="capitalize text-muted-foreground">{room.roomType}</TableCell>
-                          <TableCell>{room.reservations}</TableCell>
-                          <TableCell className="font-semibold text-foreground">
-                            ${room.revenue.toFixed(2)}
-                          </TableCell>
-                          <TableCell>
-                            $
-                            {room.reservations > 0
-                              ? (room.revenue / room.reservations).toFixed(2)
-                              : '0.00'}
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {roomsIncome.map((room) => {
+                        const revenue = toNumber(room.totalIncome);
+                        const paymentsCount = toNumber(room.paymentsCount);
+
+                        return (
+                          <TableRow key={room.roomNumber}>
+                            <TableCell className="font-medium">{room.roomNumber}</TableCell>
+                            <TableCell className="font-semibold text-foreground">
+                              {currencyFormatter.format(revenue)}
+                            </TableCell>
+                            <TableCell>{paymentsCount}</TableCell>
+                            <TableCell>
+                              {currencyFormatter.format(
+                                paymentsCount > 0 ? revenue / paymentsCount : 0,
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </CardContent>

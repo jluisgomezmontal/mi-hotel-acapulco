@@ -1,14 +1,24 @@
-'use client';
-
+import { Navbar } from '@/components/layout/Navbar';
 import { RoomForm } from '@/components/rooms/RoomForm';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function NewRoomPage() {
   return (
-    <div className="container mx-auto py-8">
-      <Card className="max-w-4xl mx-auto">
-        <RoomForm />
-      </Card>
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <main className="container mx-auto px-4 py-8">
+        <Card className="mx-auto max-w-3xl">
+          <CardHeader>
+            <CardTitle>Nueva habitación</CardTitle>
+            <CardDescription>
+              Ingresa los detalles para agregar una nueva habitación al sistema
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <RoomForm />
+          </CardContent>
+        </Card>
+      </main>
     </div>
   );
 }

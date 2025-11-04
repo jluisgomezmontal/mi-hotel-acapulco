@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { paymentsApi } from '../api/payments';
-import type { PaymentFormData } from '../types';
+import type { PaymentFormData, PaymentListResponse } from '../types';
 
 export function usePayments(params?: {
   reservationId?: string;
@@ -12,6 +12,7 @@ export function usePayments(params?: {
   return useQuery({
     queryKey: ['payments', params],
     queryFn: () => paymentsApi.getAll(params),
+    select: (data): PaymentListResponse => data,
   });
 }
 

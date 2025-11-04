@@ -16,10 +16,16 @@ export const reservationsApi = {
     if (params?.startDate) queryParams.append('startDate', params.startDate);
     if (params?.endDate) queryParams.append('endDate', params.endDate);
 
-    const response = await fetch(`${API_ENDPOINTS.reservations}?${queryParams}`);
+    const queryString = queryParams.toString();
+    const response = await fetch(
+      queryString ? `${API_ENDPOINTS.reservations}?${queryString}` : API_ENDPOINTS.reservations,
+    );
     if (!response.ok) throw new Error('Failed to fetch reservations');
     const data = await response.json();
-    return data.data || data;
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.data)) return data.data;
+    if (Array.isArray(data?.results)) return data.results;
+    return [];
   },
 
   getById: async (id: string): Promise<Reservation> => {
@@ -70,9 +76,20 @@ export const reservationsApi = {
     return data.data || data;
   },
 
+  update: async (id: string, reservation: ReservationFormData): Promise<Reservation> => {
+    const response = await fetch(`${API_ENDPOINTS.reservations}/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(reservation),
+    });
+    if (!response.ok) throw new Error('Failed to update reservation');
+    const data = await response.json();
+    return data.data || data;
+  },
+
   updateStatus: async (
     id: string,
-    status: 'pending' | 'confirmed' | 'checked-in' | 'checked-out' | 'cancelled'
+    status: 'pending' | 'confirmed' | 'checked-in' | 'checked-out' | 'cancelled' | 'completed'
   ): Promise<Reservation> => {
     const response = await fetch(`${API_ENDPOINTS.reservations}/${id}/status`, {
       method: 'PATCH',

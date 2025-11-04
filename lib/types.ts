@@ -52,7 +52,7 @@ export interface Reservation {
 }
 
 export interface Payment {
-  _id: string;
+  id: string;
   reservation: Reservation | string;
   guest: Guest | string;
   amount: number;
@@ -63,20 +63,53 @@ export interface Payment {
   updatedAt: string;
 }
 
-export interface MonthlyReport {
+export interface PaymentListResponse {
+  results: Payment[];
+  count: number;
+  total: number;
+  totalPages: number;
+  page: number;
+  totalAmount: number;
+}
+
+export interface MonthlyReportPeriod {
   year: number;
   month: number;
+  label: string;
+  start: string;
+  end: string;
+  daysInMonth: number;
+}
+
+export interface MonthlyReportOccupancy {
+  roomsCount: number;
+  totalRoomNightsAvailable: number;
+  totalNightsBooked: number;
   occupancyRate: number;
-  totalReservations: number;
+}
+
+export interface MonthlyReportIncomeByRoom {
+  roomNumber: number | string;
   totalIncome: number;
+  paymentsCount: number;
+}
+
+export interface MonthlyReportIncome {
+  totalIncome: number;
+  byRoom: MonthlyReportIncomeByRoom[];
+}
+
+export interface MonthlyReportCancellations {
+  totalReservations: number;
   cancelledReservations: number;
   cancellationRate: number;
-  roomRevenueBreakdown: {
-    roomNumber: string;
-    roomType: string;
-    revenue: number;
-    reservations: number;
-  }[];
+}
+
+export interface MonthlyReport {
+  period: MonthlyReportPeriod;
+  occupancy: MonthlyReportOccupancy;
+  income: MonthlyReportIncome;
+  cancellations: MonthlyReportCancellations;
 }
 
 // Form types
