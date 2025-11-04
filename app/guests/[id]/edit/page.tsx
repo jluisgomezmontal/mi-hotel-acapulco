@@ -29,9 +29,6 @@ export default function EditGuestPage() {
         phone: guest.phone,
         documentType: guest.documentType,
         documentNumber: guest.documentNumber,
-        address: guest.address,
-        city: guest.city,
-        country: guest.country,
         notes: guest.notes,
       }
     : undefined;
