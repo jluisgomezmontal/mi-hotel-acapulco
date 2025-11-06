@@ -53,7 +53,6 @@ export default function PaymentsPage() {
   const paymentCount = payments.length;
   const cashPayments = payments.filter((payment) => payment.method === 'efectivo');
   const cashAmount = cashPayments.reduce((sum, payment) => sum + payment.amount, 0);
-console.log(payments)
   return (
     <div className="min-h-screen bg-background">
       <Navbar />

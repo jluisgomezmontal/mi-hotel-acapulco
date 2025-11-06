@@ -1,5 +1,6 @@
-import { API_ENDPOINTS } from '../config';
-import type { Guest, GuestFormData, GuestsListResponse } from '../types';
+import { apiFetch, apiFetchJson } from '@/lib/api/client';
+import { API_ENDPOINTS } from '@/lib/config';
+import type { Guest, GuestFormData, GuestsListResponse } from '@/lib/types';
 
 export const guestsApi = {
   getAll: async (params?: {
@@ -14,51 +15,71 @@ export const guestsApi = {
     if (params?.search) queryParams.append('search', params.search);
     if (params?.documentType) queryParams.append('documentType', params.documentType);
 
-    const response = await fetch(`${API_ENDPOINTS.guests}?${queryParams}`);
-    if (!response.ok) throw new Error('Failed to fetch guests');
-    const data = await response.json();
+    const raw = await apiFetchJson<unknown>(`${API_ENDPOINTS.guests}?${queryParams}`);
+
+    if (!raw || typeof raw !== 'object') {
+      return { guests: [], total: 0, page: 1, pages: 1 } satisfies GuestsListResponse;
+    }
+
+    const payload = raw as Partial<GuestsListResponse> & {
+      results?: Guest[];
+      count?: number;
+      totalPages?: number;
+    };
+
+    const guests = Array.isArray(payload.guests)
+      ? payload.guests
+      : Array.isArray(payload.results)
+        ? payload.results
+        : [];
+
+    const total =
+      typeof payload.total === 'number'
+        ? payload.total
+        : typeof payload.count === 'number'
+          ? payload.count
+          : guests.length;
+
+    const page = typeof payload.page === 'number' ? payload.page : 1;
+    const pages =
+      typeof payload.pages === 'number'
+        ? payload.pages
+        : typeof payload.totalPages === 'number'
+          ? payload.totalPages
+          : 1;
 
     return {
-      guests: data.guests ?? data.results ?? [],
-      total: data.total ?? data.count ?? 0,
-      page: data.page ?? 1,
-      pages: data.pages ?? data.totalPages ?? 1,
+      guests,
+      total,
+      page,
+      pages,
     } satisfies GuestsListResponse;
   },
 
   getById: async (id: string): Promise<Guest> => {
-    const response = await fetch(`${API_ENDPOINTS.guests}/${id}`);
-    if (!response.ok) throw new Error('Failed to fetch guest');
-    const data = await response.json();
-    return data.data || data;
+    const data = await apiFetchJson<Guest | { data: Guest }>(`${API_ENDPOINTS.guests}/${id}`);
+    return (data as { data?: Guest }).data ?? (data as Guest);
   },
 
   create: async (guest: GuestFormData): Promise<Guest> => {
-    const response = await fetch(API_ENDPOINTS.guests, {
+    const data = await apiFetchJson<Guest | { data: Guest }>(API_ENDPOINTS.guests, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(guest),
     });
-    if (!response.ok) throw new Error('Failed to create guest');
-    const data = await response.json();
-    return data.data || data;
+    return (data as { data?: Guest }).data ?? (data as Guest);
   },
 
   update: async (id: string, guest: Partial<GuestFormData>): Promise<Guest> => {
-    const response = await fetch(`${API_ENDPOINTS.guests}/${id}`, {
+    const data = await apiFetchJson<Guest | { data: Guest }>(`${API_ENDPOINTS.guests}/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(guest),
     });
-    if (!response.ok) throw new Error('Failed to update guest');
-    const data = await response.json();
-    return data.data || data;
+    return (data as { data?: Guest }).data ?? (data as Guest);
   },
 
   delete: async (id: string): Promise<void> => {
-    const response = await fetch(`${API_ENDPOINTS.guests}/${id}`, {
+    await apiFetch(`${API_ENDPOINTS.guests}/${id}`, {
       method: 'DELETE',
     });
-    if (!response.ok) throw new Error('Failed to delete guest');
   },
 };

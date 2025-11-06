@@ -1,10 +1,18 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Home, BedDouble, Calendar, Users, CreditCard, BarChart3 } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/lib/context/AuthContext';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const navItems = [
   { href: '/', label: 'Inicio', icon: Home },
@@ -17,6 +25,19 @@ const navItems = [
 
 export function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, logout, isLoading } = useAuth();
+
+  const fullName = user ? `${user.firstName} ${user.lastName}`.trim() : '';
+  const displayName = fullName || user?.email || 'Usuario';
+  const initials = user
+    ? `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase()
+    : 'U';
+
+  const handleLogout = () => {
+    logout();
+    router.replace('/auth/login');
+  };
 
   return (
     <nav className="border-b bg-background">
@@ -49,6 +70,28 @@ export function Navbar() {
             })}
 
             <ThemeToggle />
+
+            {isLoading ? (
+              <div className="h-9 w-32 animate-pulse rounded-md bg-muted" />
+            ) : (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center gap-2 px-2">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                      {initials}
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <div className="px-2 py-1.5 text-sm font-medium">
+                    {displayName}
+                  </div>
+                  <DropdownMenuItem onSelect={handleLogout} variant="destructive">
+                    Cerrar sesión
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
       </div>

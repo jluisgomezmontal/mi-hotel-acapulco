@@ -1,19 +1,17 @@
+import { apiFetchJson } from './client';
+import { unwrapPayload } from './helpers';
 import { API_ENDPOINTS } from '../config';
 import type { Room, RoomFormData } from '../types';
 
 export const roomsApi = {
   getAll: async (): Promise<Room[]> => {
-    const response = await fetch(API_ENDPOINTS.rooms);
-    if (!response.ok) throw new Error('Failed to fetch rooms');
-    const data = await response.json();
-    return data.data || data;
+    const data = await apiFetchJson<Room[] | { data?: Room[] }>(API_ENDPOINTS.rooms);
+    return unwrapPayload(data);
   },
 
   getById: async (id: string): Promise<Room> => {
-    const response = await fetch(`${API_ENDPOINTS.rooms}/${id}`);
-    if (!response.ok) throw new Error('Failed to fetch room');
-    const data = await response.json();
-    return data.data || data;
+    const data = await apiFetchJson<Room | { data?: Room }>(`${API_ENDPOINTS.rooms}/${id}`);
+    return unwrapPayload(data);
   },
 
   search: async (params: {
@@ -28,49 +26,42 @@ export const roomsApi = {
     if (params.maxPrice) queryParams.append('maxPrice', params.maxPrice.toString());
     if (params.available !== undefined) queryParams.append('available', params.available.toString());
 
-    const response = await fetch(`${API_ENDPOINTS.rooms}/search?${queryParams}`);
-    if (!response.ok) throw new Error('Failed to search rooms');
-    const data = await response.json();
-    return data.data || data;
+    const data = await apiFetchJson<Room[] | { data?: Room[] }>(
+      `${API_ENDPOINTS.rooms}/search?${queryParams}`,
+    );
+    return unwrapPayload(data);
   },
 
   create: async (room: RoomFormData): Promise<Room> => {
-    const response = await fetch(API_ENDPOINTS.rooms, {
+    const data = await apiFetchJson<Room | { data?: Room }>(API_ENDPOINTS.rooms, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(room),
     });
-    if (!response.ok) throw new Error('Failed to create room');
-    const data = await response.json();
-    return data.data || data;
+    return unwrapPayload(data);
   },
 
   update: async (id: string, room: Partial<RoomFormData>): Promise<Room> => {
-    const response = await fetch(`${API_ENDPOINTS.rooms}/${id}`, {
+    const data = await apiFetchJson<Room | { data?: Room }>(`${API_ENDPOINTS.rooms}/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(room),
     });
-    if (!response.ok) throw new Error('Failed to update room');
-    const data = await response.json();
-    return data.data || data;
+    return unwrapPayload(data);
   },
 
   updateAvailability: async (id: string, available: boolean): Promise<Room> => {
-    const response = await fetch(`${API_ENDPOINTS.rooms}/${id}/availability`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ isAvailable: available }),
-    });
-    if (!response.ok) throw new Error('Failed to update availability');
-    const data = await response.json();
-    return data.data || data;
+    const data = await apiFetchJson<Room | { data?: Room }>(
+      `${API_ENDPOINTS.rooms}/${id}/availability`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ isAvailable: available }),
+      },
+    );
+    return unwrapPayload(data);
   },
 
   delete: async (id: string): Promise<void> => {
-    const response = await fetch(`${API_ENDPOINTS.rooms}/${id}`, {
+    await apiFetchJson<void>(`${API_ENDPOINTS.rooms}/${id}`, {
       method: 'DELETE',
     });
-    if (!response.ok) throw new Error('Failed to delete room');
   },
 };

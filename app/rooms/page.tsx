@@ -17,7 +17,6 @@ const roomTypeLabels = {
 
 export default function RoomsPage() {
   const { data: rooms, isLoading, error } = useRooms();
-  console.log(rooms)
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
