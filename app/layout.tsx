@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -31,9 +32,17 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider>
           <AuthProvider>
-            <AppGuard>
-              <QueryProvider>{children}</QueryProvider>
-            </AppGuard>
+            <Suspense
+              fallback={
+                <div className="flex min-h-screen items-center justify-center bg-background">
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+                </div>
+              }
+            >
+              <AppGuard>
+                <QueryProvider>{children}</QueryProvider>
+              </AppGuard>
+            </Suspense>
           </AuthProvider>
         </ThemeProvider>
       </body>
