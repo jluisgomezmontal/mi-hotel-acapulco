@@ -63,7 +63,7 @@ export default function PaymentsPage() {
             <p className="mt-2 text-muted-foreground">Gestiona los pagos y abonos de reservaciones</p>
           </div>
           <Link href="/payments/new">
-            <Button>
+            <Button size="sm" className="md:h-9 md:px-4 md:gap-2 md:has-[>svg]:px-3">
               <Plus className="mr-2 h-4 w-4" />
               Registrar Pago
             </Button>

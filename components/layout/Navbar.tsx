@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, BedDouble, Calendar, Users, CreditCard, BarChart3 } from 'lucide-react';
+import { Home, BedDouble, Calendar, Users, CreditCard, BarChart3, Menu } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/context/AuthContext';
@@ -13,6 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 const navItems = [
   { href: '/', label: 'Inicio', icon: Home },
@@ -47,7 +48,8 @@ export function Navbar() {
             Mi Hotel Acapulco
           </Link>
 
-          <div className="flex items-center gap-3">
+          {/* Desktop navigation */}
+          <div className="hidden items-center gap-3 md:flex">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -92,6 +94,61 @@ export function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
+          </div>
+
+          {/* Mobile actions */}
+          <div className="flex items-center gap-2 md:hidden">
+            <ThemeToggle />
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label="Abrir menú">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="p-0">
+                <div className="p-4">
+                  <DialogHeader className="mb-2">
+                    <DialogTitle className="text-sm font-medium text-muted-foreground">
+                      Menú
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="flex flex-col">
+                    {navItems.map((item) => {
+                      const Icon = item.icon;
+                      const isActive = pathname === item.href;
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          className={cn(
+                            'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                            isActive
+                              ? 'bg-primary text-primary-foreground'
+                              : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                          )}
+                        >
+                          <Icon className="h-4 w-4" />
+                          {item.label}
+                        </Link>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-4 flex items-center justify-between">
+                    <div className="text-sm text-muted-foreground">
+                      {isLoading ? 'Cargando...' : displayName}
+                    </div>
+                    {isLoading ? (
+                      <div className="h-9 w-24 animate-pulse rounded-md bg-muted" />
+                    ) : (
+                      <Button variant="destructive" size="sm" onClick={handleLogout}>
+                        Cerrar sesión
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       </div>

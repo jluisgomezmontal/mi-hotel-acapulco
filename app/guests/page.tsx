@@ -44,7 +44,7 @@ export default function GuestsPage() {
             <p className="mt-2 text-muted-foreground">Gestiona la información de los huéspedes</p>
           </div>
           <Link href="/guests/new">
-            <Button>
+            <Button size="sm" className="md:h-9 md:px-4 md:gap-2 md:has-[>svg]:px-3">
               <Plus className="mr-2 h-4 w-4" />
               Nuevo Huésped
             </Button>

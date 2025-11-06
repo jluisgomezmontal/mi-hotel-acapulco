@@ -27,7 +27,7 @@ export default function RoomsPage() {
             <p className="mt-2 text-muted-foreground">Gestiona las habitaciones del hotel</p>
           </div>
           <Link href="/rooms/new">
-            <Button>
+            <Button size="sm" className="md:h-9 md:px-4 md:gap-2 md:has-[>svg]:px-3">
               <Plus className="mr-2 h-4 w-4" />
               Nueva Habitación
             </Button>

@@ -61,7 +61,7 @@ export default function ReservationsPage() {
             <p className="mt-2 text-muted-foreground">Gestiona las reservaciones del hotel</p>
           </div>
           <Link href="/reservations/new">
-            <Button>
+            <Button size="sm" className="md:h-9 md:px-4 md:gap-2 md:has-[>svg]:px-3">
               <Plus className="mr-2 h-4 w-4" />
               Nueva Reservación
             </Button>
