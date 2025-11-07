@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Mi Hotel Acapulco - Gestión Hotelera",
+  title: "Mi Hotel Admin - Gestión Hotelera",
   description: "Sistema de gestión para habitaciones, reservaciones, huéspedes y pagos",
 };
 

@@ -49,7 +49,7 @@ export default function RegisterPage() {
         <Card className="mx-auto my-16 w-full max-w-md">
           <CardHeader className="space-y-1 text-center">
             <CardTitle className="text-2xl font-semibold text-foreground">Crear cuenta</CardTitle>
-            <CardDescription>Regístrate para administrar Mi Hotel Acapulco.</CardDescription>
+            <CardDescription>Regístrate para administrar Mi Hotel Admin.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">

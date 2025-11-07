@@ -64,7 +64,7 @@ export function DashboardClientPage() {
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-foreground">Dashboard</h1>
           <p className="mt-2 text-muted-foreground">
-            Bienvenido al sistema de gestión hotelera de Mi Hotel Acapulco
+            Bienvenido al sistema de gestión hotelera de Mi Hotel Admin
           </p>
         </div>
 
