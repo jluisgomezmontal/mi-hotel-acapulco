@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useMemo, useState } from 'react';
+
 import { Navbar } from '@/components/layout/Navbar';
 import {
   Card,
@@ -22,6 +24,13 @@ import { useReservations } from '@/lib/hooks/useReservations';
 import { Plus, Calendar as CalendarIcon } from 'lucide-react';
 import Link from 'next/link';
 import type { Reservation, Room, Guest } from '@/lib/types';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const statusLabels: Record<Reservation['status'], string> = {
   pending: 'Pendiente',
@@ -35,14 +44,69 @@ const statusLabels: Record<Reservation['status'], string> = {
 const statusColors: Record<Reservation['status'], string> = {
   pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-200',
   confirmed: 'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-200',
-  'checked-in': 'bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-200',
+  'checked-in': 'bg-green-200 text-green-900 dark:bg-green-600/30 dark:text-green-100',
   'checked-out': 'bg-gray-100 text-gray-800 dark:bg-muted dark:text-foreground',
   cancelled: 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200',
-  completed: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200',
+  completed: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300',
 };
+
+
+const statusOptions: Array<'all' | Reservation['status']> = [
+  'all',
+  'pending',
+  'confirmed',
+  'checked-in',
+  'checked-out',
+  'cancelled',
+  'completed',
+];
+
+const STATUS_FILTER_STORAGE_KEY = 'reservations:status-filter';
 
 export default function ReservationsPage() {
   const { data: reservations, isLoading, error } = useReservations();
+  const [statusFilter, setStatusFilter] = useState<'all' | Reservation['status']>('all');
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const storedFilter = window.localStorage.getItem(STATUS_FILTER_STORAGE_KEY);
+    if (storedFilter && statusOptions.includes(storedFilter as typeof statusOptions[number])) {
+      setStatusFilter(storedFilter as typeof statusOptions[number]);
+    }
+  }, []);
+
+  const handleStatusChange = (value: string) => {
+    const typedValue = (value as 'all' | Reservation['status']) ?? 'all';
+    setStatusFilter(typedValue);
+
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    window.localStorage.setItem(STATUS_FILTER_STORAGE_KEY, typedValue);
+  };
+
+  const sortedReservations = useMemo(() => {
+    if (!reservations) {
+      return [];
+    }
+
+    return [...reservations].sort(
+      (a, b) => new Date(a.checkIn).getTime() + new Date(b.checkIn).getTime(),
+    );
+  }, [reservations]);
+
+  const filteredReservations = useMemo(() => {
+    if (statusFilter === 'all') {
+      return sortedReservations;
+    }
+
+    return sortedReservations.filter((reservation) => reservation.status === statusFilter);
+  }, [sortedReservations, statusFilter]);
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-MX', {
       day: '2-digit',
@@ -88,11 +152,29 @@ export default function ReservationsPage() {
             <CardHeader>
               <CardTitle>Lista de Reservaciones</CardTitle>
               <CardDescription>
-                {reservations.length} reservación{reservations.length !== 1 ? 'es' : ''}{' '}
-                registrada{reservations.length !== 1 ? 's' : ''}
+                {filteredReservations.length} reservación
+                {filteredReservations.length !== 1 ? 'es' : ''} registrada
+                {filteredReservations.length !== 1 ? 's' : ''}
               </CardDescription>
             </CardHeader>
             <CardContent>
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+                <div className="text-sm text-muted-foreground">
+                  Filtra por estado para enfocarte en las reservaciones relevantes.
+                </div>
+                <Select value={statusFilter} onValueChange={handleStatusChange}>
+                  <SelectTrigger className="w-full max-w-xs">
+                    <SelectValue placeholder="Filtrar por estado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {statusOptions.map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {option === 'all' ? 'Todas las reservaciones' : statusLabels[option]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -107,7 +189,7 @@ export default function ReservationsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {reservations.map((reservation: Reservation) => {
+                  {filteredReservations.map((reservation: Reservation) => {
                     const room = reservation.room as Room | string | number | undefined;
                     const guest = reservation.guest as Guest | string | undefined;
                     const roomDisplay =
